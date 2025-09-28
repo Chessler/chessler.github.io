@@ -20,7 +20,7 @@ title                    : "Carly's Code Corner"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
 name                     : "Carly Hessler"
-description              : "My professional website."
+description              : "A semi-professional website."
 url                      : "https://chessler.github.io"
 baseurl                  : ""
 repository               : "chessler/chessler.github.io"
