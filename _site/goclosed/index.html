@@ -1,0 +1,555 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Closed-Source Deliveries with Go Plugins - Carly’s Code Corner</title>
+<meta name="description" content="Let’s say your customer wants a partial closed source delivery. Source in one internal repository, API definition, shared object, and loader in another for a customer - just like C++! Go is, like, C++ plusplus so it should work too, right?">
+
+
+  <meta name="author" content="Carly Hessler">
+  
+  <meta property="article:author" content="Carly Hessler">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Carly&#39;s Code Corner">
+<meta property="og:title" content="Closed-Source Deliveries with Go Plugins">
+<meta property="og:url" content="http://localhost:4000/goclosed/">
+
+
+  <meta property="og:description" content="Let’s say your customer wants a partial closed source delivery. Source in one internal repository, API definition, shared object, and loader in another for a customer - just like C++! Go is, like, C++ plusplus so it should work too, right?">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2025-09-29T00:00:00-04:00">
+
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/goclosed/">
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Carly's Code Corner Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Carly&#39;s Code Corner
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/"
+                
+                
+              >Home</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="http://localhost:4000/" itemprop="url">Carly Hessler</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>Curious hybrid Senior Software/Site Reliability Engineer strangely excited about Software Observability and Metrics. Relentless Problem-Solver. Occasionally funny.</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Melbourne, Florida</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="mailto:chessler1337@gmail.com" rel="nofollow noopener noreferrer me"><i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span></a></li>
+          
+        
+          
+            <li><a href="https://github.com/chessler" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Closed-Source Deliveries with Go Plugins">
+    <meta itemprop="description" content="Let’s say your customer wants a partial closed source delivery. Source in one internal repository, API definition, shared object, and loader in another for a customer - just like C++! Go is, like, C++ plusplus so it should work too, right?">
+    <meta itemprop="datePublished" content="2025-09-29T00:00:00-04:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="http://localhost:4000/goclosed/" itemprop="url">Closed-Source Deliveries with Go Plugins
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>Let’s say your customer wants a partial closed source delivery. Source in one internal repository, API definition, shared object, and loader in another for a customer - just like C++! Go is, like, C++ plusplus so it should work too, right?</p>
+
+<p>Ehhhh, yes… but not without effort to figure out how. Hopefully, this post about how I set up this split delivery saves you some time and effort if you need to follow the same trimmed path.</p>
+
+<hr />
+
+<h2 id="the-split-brain-repo-model">The Split-Brain Repo Model</h2>
+
+<ul>
+  <li><strong>Source repository</strong> - the actual plugin code. This never leaves the building. We’ll call it <code class="language-plaintext highlighter-rouge">banana</code>.</li>
+  <li><strong>Delivery repository</strong> - the API definition, a loader, and the compiled <code class="language-plaintext highlighter-rouge">.so</code> file. This is what the customer sees. It’s called <code class="language-plaintext highlighter-rouge">banana-sdk</code>.</li>
+</ul>
+
+<p>HashiCorp’s <code class="language-plaintext highlighter-rouge">go-plugin</code> was tempting, but after consideration we didn’t go for it. Not because it doesn’t work, but because it brings both runtime overhead and cognitive complexity overhead. Supervisors, RPC schemas, process management, cross-process debugging. The future maintenance tax was obvious.</p>
+
+<p>Instead, we chose the standard library’s <code class="language-plaintext highlighter-rouge">plugin</code> package. It’s lean, native, and got the job done (eventually). But you have to be willing to do the initial coding with a minesweeper and extreme patience.</p>
+
+<hr />
+
+<h2 id="what-is-a-go-plugin">What Is a Go Plugin?</h2>
+
+<p>Go plugins are shared libraries (<code class="language-plaintext highlighter-rouge">.so</code>) you can load at runtime, compiled using <code class="language-plaintext highlighter-rouge">go build -buildmode=plugin</code>. Call <code class="language-plaintext highlighter-rouge">plugin.Open()</code>, <code class="language-plaintext highlighter-rouge">Lookup()</code> an exported symbol, type assert it, and there you go.</p>
+
+<p>Congratulations, you now know more about Go plugins than the official language maintainers.</p>
+
+<p>Unlike languages with robust reflection systems, Go doesn’t give you a handy manifest of what’s inside. Without an API contract, our customer would have no idea what’s inside. Unless they wanted to do a ton of <code class="language-plaintext highlighter-rouge">Lookup()</code> calls. That’s why we provide a separate API definition package in the delivery repo. That way, our customers know what exists in the SDK for them to use.</p>
+
+<hr />
+
+<h2 id="where-it-all-breaks">Where It All Breaks</h2>
+
+<p>On first blush, building looks straightforward:</p>
+
+<ol>
+  <li>Compile <code class="language-plaintext highlighter-rouge">.so</code> in source repo (referring to the API in the delivery repo).</li>
+  <li>Drop <code class="language-plaintext highlighter-rouge">.so</code> into the delivery repo.</li>
+  <li>Tag and ship.</li>
+</ol>
+
+<p>I tried this out. It blew up in my face. This is where the patience comes in.</p>
+
+<p>After my mentor and I spent a grueling amount of time staring at the problem, my wonderful mentor used his embedded software wizardry to find the undocumented mine: <strong>package identity checksums</strong>.</p>
+
+<p>When you compile a Go plugin, it embeds metadata about every package it imports: Exact versions, build tags, and toolchain. If the host binary was built with any difference, Go refuses to load the plugin. At runtime, Go panics with:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>plugin was built with a different version of package runtime
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="our-wonderful-simple-build-process">Our Wonderful, Simple Build Process</h2>
+
+<p>To get around this, we built a fragile little dance. Let’s say we’re releasing <code class="language-plaintext highlighter-rouge">v1.2.3</code>:</p>
+
+<ol>
+  <li>Delivery repo has a template loader.</li>
+  <li>Makefile fills in the version info (<code class="language-plaintext highlighter-rouge">v1.2.3</code>), commits, tags, pushes.</li>
+  <li>Switch to source repo, build the <code class="language-plaintext highlighter-rouge">.so</code> against that exact tag, tag source as <code class="language-plaintext highlighter-rouge">v1.2.3</code>, push.</li>
+  <li>Copy <code class="language-plaintext highlighter-rouge">.so</code> into delivery repo, commit, push.</li>
+  <li>Delete the <code class="language-plaintext highlighter-rouge">v1.2.3</code> tag from delivery repo, re-tag at the commit with the plugin, push again.</li>
+</ol>
+
+<p>Yes, this is ridiculous. But it works!</p>
+
+<hr />
+
+<h3 id="extra-gotchas">Extra Gotchas</h3>
+
+<ul>
+  <li>Life is much easier if plugin <strong>and</strong> consumer are both compiled with <code class="language-plaintext highlighter-rouge">-trimpath</code>. I’ve read it’s not strictly necessary, but I’ve never gotten this already-fragile process to work without it.</li>
+  <li>If you want to run race detection, you must compile plugin and consumer with the <code class="language-plaintext highlighter-rouge">-race</code> flag. The race detector modifies concurrency packages under the hood, so they must be in lockstep.</li>
+  <li><code class="language-plaintext highlighter-rouge">GOOS</code>, <code class="language-plaintext highlighter-rouge">GOARCH</code>, and Go version must be identical between plugin and consumer.</li>
+</ul>
+
+<p>I repeat: <strong>this is extremely fragile.</strong></p>
+
+<hr />
+
+<h2 id="debugging-a-bad-load">Debugging a Bad Load</h2>
+
+<p>When things go wrong (and they will), here’s a handy toolkit:</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">go version -m plugin.so</code> - shows module metadata inside the <code class="language-plaintext highlighter-rouge">.so</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">go version -m host-binary</code> - compare against host.</li>
+  <li><code class="language-plaintext highlighter-rouge">GODEBUG=plugin=3 ./host</code> - verbose loader logs.</li>
+  <li><code class="language-plaintext highlighter-rouge">strings plugin.so | grep -i buildinfo</code> - last resort probing.</li>
+</ol>
+
+<p>And of course: double-check the build flags.</p>
+
+<hr />
+
+<h2 id="closing-thoughts">Closing Thoughts</h2>
+
+<p>“Uh, this doesn’t seem like a well-supported feature.” Yep! Go clearly does not want you to do this. The language philosophy prefers:</p>
+
+<ul>
+  <li>Open source delivery</li>
+  <li>Entire-app precompiled binaries</li>
+  <li>All-in-house builds</li>
+</ul>
+
+<p>So the partial closed-source delivery model feels bolted on because it is. It works, but only if you’re willing to maintain fragile build rituals, pin toolchains, and be patient.</p>
+
+<h2 id="errata">Errata</h2>
+
+<p>We did not encounter these, but I wrote down the contents of an extremely helpful reddit comment by a current or former CircleCI employee that has since been removed. I rewrite it here for posterity:</p>
+
+<p>Any packages outside of the standard library that are used by both the plugin and the program must have their versions match exactly. This means that when distributing a program binary, you must communicate the exact versions of all dependencies. Running <code class="language-plaintext highlighter-rouge">go version -m</code> causes the list of dependencies to be embedded in the binary directly. The user can get the list of dependencies by running <code class="language-plaintext highlighter-rouge">go version -m</code> on the binary delivered.</p>
+
+<p>In order to work on things like Alpine Linux’s musl libc6-compat, everything must be compiled for compatibility with LSB 3. Setting <code class="language-plaintext highlighter-rouge">_FORTIFY_SOURCE=2</code> with GNU libc causes the CGO 1.12 runtime to require LSB 4. Several distros (including Ubuntu 14.04, which CircleCI uses) patch their GCC to define <code class="language-plaintext highlighter-rouge">_FORTIFY_SOURCE=2</code> by default. When compiling plugins, users/customers may need to fuss with setting <code class="language-plaintext highlighter-rouge">CGO_CPPFLAGS</code> to make things not fall over.</p>
+
+<p>Because plugins use the libc dynamic linker, they force <code class="language-plaintext highlighter-rouge">CGO_ENABLE on</code>; cross-compiling is no longer easy to do. Someone wanting to compile a plugin for the GNU/Linux program binary from their macOS workstation must compile the plugin in a VM (or Docker, since Docker for Mac runs in a VM).</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2025-09-29T00:00:00-04:00">September 29, 2025</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?text=Closed-Source+Deliveries+with+Go+Plugins%20http%3A%2F%2Flocalhost%3A4000%2Fgoclosed%2F" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2Fgoclosed%2F" class="btn btn--facebook" aria-label="Share on Facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook">
+    <i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=http://localhost:4000/goclosed/" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+  <a href="https://bsky.app/intent/compose?text=Closed-Source+Deliveries+with+Go+Plugins%20http%3A%2F%2Flocalhost%3A4000%2Fgoclosed%2F" class="btn btn--bluesky" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Bluesky">
+    <i class="fab fa-fw fa-bluesky" aria-hidden="true"></i><span> Bluesky</span>
+  </a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/hello/" class="pagination--pager" title="Hello, World!">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/hello/" rel="permalink">Hello, World!
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          less than 1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">This is a test post to the website to be removed or updated later!
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://github.com/chessler" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2015 - 2025 <a href="http://localhost:4000">Carly&#39;s Code Corner</a>. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/jekyll-themes/minimal-mistakes/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+
+
+
+
+
+  </body>
+</html>

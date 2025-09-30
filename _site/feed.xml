@@ -1,1 +1,114 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-09-27T21:51:45-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Carly’s Code Corner</title><subtitle>A semi-professional website.</subtitle><author><name>Carly Hessler</name></author><entry><title type="html">Hello, World!</title><link href="http://localhost:4000/hello/" rel="alternate" type="text/html" title="Hello, World!" /><published>2025-09-27T00:00:00-04:00</published><updated>2025-09-27T00:00:00-04:00</updated><id>http://localhost:4000/hello</id><content type="html" xml:base="http://localhost:4000/hello/"><![CDATA[<p>This is a test post to the website to be removed or updated later!</p>]]></content><author><name>Carly Hessler</name></author><summary type="html"><![CDATA[This is a test post to the website to be removed or updated later!]]></summary></entry></feed>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-09-29T21:59:09-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Carly’s Code Corner</title><subtitle>A semi-professional website.</subtitle><author><name>Carly Hessler</name></author><entry><title type="html">Closed-Source Deliveries with Go Plugins</title><link href="http://localhost:4000/goclosed/" rel="alternate" type="text/html" title="Closed-Source Deliveries with Go Plugins" /><published>2025-09-29T00:00:00-04:00</published><updated>2025-09-29T00:00:00-04:00</updated><id>http://localhost:4000/goclosed</id><content type="html" xml:base="http://localhost:4000/goclosed/"><![CDATA[<p>Let’s say your customer wants a partial closed source delivery. Source in one internal repository, API definition, shared object, and loader in another for a customer - just like C++! Go is, like, C++ plusplus so it should work too, right?</p>
+
+<p>Ehhhh, yes… but not without effort to figure out how. Hopefully, this post about how I set up this split delivery saves you some time and effort if you need to follow the same trimmed path.</p>
+
+<hr />
+
+<h2 id="the-split-brain-repo-model">The Split-Brain Repo Model</h2>
+
+<ul>
+  <li><strong>Source repository</strong> - the actual plugin code. This never leaves the building. We’ll call it <code class="language-plaintext highlighter-rouge">banana</code>.</li>
+  <li><strong>Delivery repository</strong> - the API definition, a loader, and the compiled <code class="language-plaintext highlighter-rouge">.so</code> file. This is what the customer sees. It’s called <code class="language-plaintext highlighter-rouge">banana-sdk</code>.</li>
+</ul>
+
+<p>HashiCorp’s <code class="language-plaintext highlighter-rouge">go-plugin</code> was tempting, but after consideration we didn’t go for it. Not because it doesn’t work, but because it brings both runtime overhead and cognitive complexity overhead. Supervisors, RPC schemas, process management, cross-process debugging. The future maintenance tax was obvious.</p>
+
+<p>Instead, we chose the standard library’s <code class="language-plaintext highlighter-rouge">plugin</code> package. It’s lean, native, and got the job done (eventually). But you have to be willing to do the initial coding with a minesweeper and extreme patience.</p>
+
+<hr />
+
+<h2 id="what-is-a-go-plugin">What Is a Go Plugin?</h2>
+
+<p>Go plugins are shared libraries (<code class="language-plaintext highlighter-rouge">.so</code>) you can load at runtime, compiled using <code class="language-plaintext highlighter-rouge">go build -buildmode=plugin</code>. Call <code class="language-plaintext highlighter-rouge">plugin.Open()</code>, <code class="language-plaintext highlighter-rouge">Lookup()</code> an exported symbol, type assert it, and there you go.</p>
+
+<p>Congratulations, you now know more about Go plugins than the official language maintainers.</p>
+
+<p>Unlike languages with robust reflection systems, Go doesn’t give you a handy manifest of what’s inside. Without an API contract, our customer would have no idea what’s inside. Unless they wanted to do a ton of <code class="language-plaintext highlighter-rouge">Lookup()</code> calls. That’s why we provide a separate API definition package in the delivery repo. That way, our customers know what exists in the SDK for them to use.</p>
+
+<hr />
+
+<h2 id="where-it-all-breaks">Where It All Breaks</h2>
+
+<p>On first blush, building looks straightforward:</p>
+
+<ol>
+  <li>Compile <code class="language-plaintext highlighter-rouge">.so</code> in source repo (referring to the API in the delivery repo).</li>
+  <li>Drop <code class="language-plaintext highlighter-rouge">.so</code> into the delivery repo.</li>
+  <li>Tag and ship.</li>
+</ol>
+
+<p>I tried this out. It blew up in my face. This is where the patience comes in.</p>
+
+<p>After my mentor and I spent a grueling amount of time staring at the problem, my wonderful mentor used his embedded software wizardry to find the undocumented mine: <strong>package identity checksums</strong>.</p>
+
+<p>When you compile a Go plugin, it embeds metadata about every package it imports: Exact versions, build tags, and toolchain. If the host binary was built with any difference, Go refuses to load the plugin. At runtime, Go panics with:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>plugin was built with a different version of package runtime
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="our-wonderful-simple-build-process">Our Wonderful, Simple Build Process</h2>
+
+<p>To get around this, we built a fragile little dance. Let’s say we’re releasing <code class="language-plaintext highlighter-rouge">v1.2.3</code>:</p>
+
+<ol>
+  <li>Delivery repo has a template loader.</li>
+  <li>Makefile fills in the version info (<code class="language-plaintext highlighter-rouge">v1.2.3</code>), commits, tags, pushes.</li>
+  <li>Switch to source repo, build the <code class="language-plaintext highlighter-rouge">.so</code> against that exact tag, tag source as <code class="language-plaintext highlighter-rouge">v1.2.3</code>, push.</li>
+  <li>Copy <code class="language-plaintext highlighter-rouge">.so</code> into delivery repo, commit, push.</li>
+  <li>Delete the <code class="language-plaintext highlighter-rouge">v1.2.3</code> tag from delivery repo, re-tag at the commit with the plugin, push again.</li>
+</ol>
+
+<p>Yes, this is ridiculous. But it works!</p>
+
+<hr />
+
+<h3 id="extra-gotchas">Extra Gotchas</h3>
+
+<ul>
+  <li>Life is much easier if plugin <strong>and</strong> consumer are both compiled with <code class="language-plaintext highlighter-rouge">-trimpath</code>. I’ve read it’s not strictly necessary, but I’ve never gotten this already-fragile process to work without it.</li>
+  <li>If you want to run race detection, you must compile plugin and consumer with the <code class="language-plaintext highlighter-rouge">-race</code> flag. The race detector modifies concurrency packages under the hood, so they must be in lockstep.</li>
+  <li><code class="language-plaintext highlighter-rouge">GOOS</code>, <code class="language-plaintext highlighter-rouge">GOARCH</code>, and Go version must be identical between plugin and consumer.</li>
+</ul>
+
+<p>I repeat: <strong>this is extremely fragile.</strong></p>
+
+<hr />
+
+<h2 id="debugging-a-bad-load">Debugging a Bad Load</h2>
+
+<p>When things go wrong (and they will), here’s a handy toolkit:</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">go version -m plugin.so</code> - shows module metadata inside the <code class="language-plaintext highlighter-rouge">.so</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">go version -m host-binary</code> - compare against host.</li>
+  <li><code class="language-plaintext highlighter-rouge">GODEBUG=plugin=3 ./host</code> - verbose loader logs.</li>
+  <li><code class="language-plaintext highlighter-rouge">strings plugin.so | grep -i buildinfo</code> - last resort probing.</li>
+</ol>
+
+<p>And of course: double-check the build flags.</p>
+
+<hr />
+
+<h2 id="closing-thoughts">Closing Thoughts</h2>
+
+<p>“Uh, this doesn’t seem like a well-supported feature.” Yep! Go clearly does not want you to do this. The language philosophy prefers:</p>
+
+<ul>
+  <li>Open source delivery</li>
+  <li>Entire-app precompiled binaries</li>
+  <li>All-in-house builds</li>
+</ul>
+
+<p>So the partial closed-source delivery model feels bolted on because it is. It works, but only if you’re willing to maintain fragile build rituals, pin toolchains, and be patient.</p>
+
+<h2 id="errata">Errata</h2>
+
+<p>We did not encounter these, but I wrote down the contents of an extremely helpful reddit comment by a current or former CircleCI employee that has since been removed. I rewrite it here for posterity:</p>
+
+<p>Any packages outside of the standard library that are used by both the plugin and the program must have their versions match exactly. This means that when distributing a program binary, you must communicate the exact versions of all dependencies. Running <code class="language-plaintext highlighter-rouge">go version -m</code> causes the list of dependencies to be embedded in the binary directly. The user can get the list of dependencies by running <code class="language-plaintext highlighter-rouge">go version -m</code> on the binary delivered.</p>
+
+<p>In order to work on things like Alpine Linux’s musl libc6-compat, everything must be compiled for compatibility with LSB 3. Setting <code class="language-plaintext highlighter-rouge">_FORTIFY_SOURCE=2</code> with GNU libc causes the CGO 1.12 runtime to require LSB 4. Several distros (including Ubuntu 14.04, which CircleCI uses) patch their GCC to define <code class="language-plaintext highlighter-rouge">_FORTIFY_SOURCE=2</code> by default. When compiling plugins, users/customers may need to fuss with setting <code class="language-plaintext highlighter-rouge">CGO_CPPFLAGS</code> to make things not fall over.</p>
+
+<p>Because plugins use the libc dynamic linker, they force <code class="language-plaintext highlighter-rouge">CGO_ENABLE on</code>; cross-compiling is no longer easy to do. Someone wanting to compile a plugin for the GNU/Linux program binary from their macOS workstation must compile the plugin in a VM (or Docker, since Docker for Mac runs in a VM).</p>]]></content><author><name>Carly Hessler</name></author><summary type="html"><![CDATA[Let’s say your customer wants a partial closed source delivery. Source in one internal repository, API definition, shared object, and loader in another for a customer - just like C++! Go is, like, C++ plusplus so it should work too, right?]]></summary></entry><entry><title type="html">Hello, World!</title><link href="http://localhost:4000/hello/" rel="alternate" type="text/html" title="Hello, World!" /><published>2025-09-27T00:00:00-04:00</published><updated>2025-09-27T00:00:00-04:00</updated><id>http://localhost:4000/hello</id><content type="html" xml:base="http://localhost:4000/hello/"><![CDATA[<p>This is a test post to the website to be removed or updated later!</p>]]></content><author><name>Carly Hessler</name></author><summary type="html"><![CDATA[This is a test post to the website to be removed or updated later!]]></summary></entry></feed>
