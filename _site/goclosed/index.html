@@ -280,7 +280,7 @@
 
       <section class="page__content" itemprop="text">
         
-        <p>Let’s say your customer wants a partial closed source delivery. Source in one internal repository, API definition, shared object, and loader in another for a customer - just like C++! Go is, like, C++ plusplus so it should work too, right?</p>
+        <p>Let’s say your customer wants a partial closed source delivery. Source in one internal repository, API definition, shared object, and loader in another for a customer - just like C++! Go is, like, C++ plus<strong>plus</strong> so it should work too, right?</p>
 
 <p>Ehhhh, yes… but not without effort to figure out how. Hopefully, this post about how I set up this split delivery saves you some time and effort if you need to follow the same trimmed path.</p>
 
@@ -302,8 +302,6 @@
 <h2 id="what-is-a-go-plugin">What Is a Go Plugin?</h2>
 
 <p>Go plugins are shared libraries (<code class="language-plaintext highlighter-rouge">.so</code>) you can load at runtime, compiled using <code class="language-plaintext highlighter-rouge">go build -buildmode=plugin</code>. Call <code class="language-plaintext highlighter-rouge">plugin.Open()</code>, <code class="language-plaintext highlighter-rouge">Lookup()</code> an exported symbol, type assert it, and there you go.</p>
-
-<p>Congratulations, you now know more about Go plugins than the official language maintainers.</p>
 
 <p>Unlike languages with robust reflection systems, Go doesn’t give you a handy manifest of what’s inside. Without an API contract, our customer would have no idea what’s inside. Unless they wanted to do a ton of <code class="language-plaintext highlighter-rouge">Lookup()</code> calls. That’s why we provide a separate API definition package in the delivery repo. That way, our customers know what exists in the SDK for them to use.</p>
 
