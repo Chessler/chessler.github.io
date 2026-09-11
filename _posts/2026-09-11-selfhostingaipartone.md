@@ -12,7 +12,7 @@ You do not need an expensive machine/GPU to start self-hosting an AI stack. Host
 
 What can you do with just a frontend? The Bigly models have really nice frontends already, with all sorts of nice features that occasionally disappear. For me, the primary appeal is that I have a digital library and I was getting annoyed constantly uploading different documents to a Bigly. This also solves issues of “where did it get that info from”. When I run a query with Open WebUI it tells me exactly what documents it used. I even have a persona that will only use documents in provided Knowledge Bases instead of anything ‘internal’ to the model.
 
-Some other great reasons for hosting a frontend (oh no a bullet point list)
+Some other great reasons for hosting a frontend (oh no a bullet point list):
 
 - **OWU supports personas that you can link to knowledge bases.**
 
@@ -40,11 +40,11 @@ There are several AI frontends on the market: Open WebUI (selfhostable, enterpri
 
 ## “Alright alright, I’m sold. How do I set this up?”
 
-**Run a container! Like everything else these days, OWU comes in a container. Their docs are where I’d look: [https://docs.openwebui.com/](https://docs.openwebui.com/)**
+**Run a container! Like everything else these days, OWU comes in a container. [Their docs](https://docs.openwebui.com/) are where I'd go first.**
 
 I personally run everything in rootless podman. It’s how I started running containers at my job and the minor extra level of security is a pleasant bonus to me.
 
-For me, I set up my system with Ansible playbooks.\*\* I have a link to a generalized version of them here. This is not my finest DevOps work, but it gets the job done. At some point I’ll re-do it.
+For me, I set up my system with Ansible playbooks.\*\* I have a link to a generalized version of them [here](https://github.com/Chessler/personal-llm-frontend). This is not my finest DevOps work, but it gets the job done. At some point I’ll re-do it.
 
 The most important and annoying part of using Open WebUI is the settings. I recommend using an environment variable file and loading that in instead of using the UI. In my own words, the two don’t sync. If you use the UI configuration it saves it to an internal database and in my experience sometimes randomly doesn’t keep on updates. If you lock it to an .env file it will definitely persist. The downside is you have to know that any config changes you make in the UI will be completely trashed on container reboot or have no effect at all. Searching, I found other issues, and I will let the Bigly model speak:
 
@@ -54,17 +54,17 @@ The most important and annoying part of using Open WebUI is the settings. I reco
 
 So set `ENABLE_PERSISTENT_CONFIG=False` and keep a file. You will save yourself headaches.
 
-Another gotcha: In Ye Olden Days (like a few months ago, AI moves quick!) you had to set `ENABLE_SIGNUP=True` on first boot even if you wanted it off so you could make an Admin account, then change it to False. It looks like now you can do `ENABLE_INITIAL_ADMIN_SIGNUP=True` which does the same thing: [https://docs.openwebui.com/reference/env-configuration/#enable_initial_admin_signup](https://docs.openwebui.com/reference/env-configuration/#enable_initial_admin_signup)
+Another gotcha: In Ye Olden Days (like a few months ago, AI moves quick!) you had to set `ENABLE_SIGNUP=True` on first boot even if you wanted it off so you could make an Admin account, then change it to False. It looks like now you can do `ENABLE_INITIAL_ADMIN_SIGNUP=True` which does the same thing [according to the docs](https://docs.openwebui.com/reference/env-configuration/#enable_initial_admin_signup).
 
 ## Now for other tweaks I wish I did starting out – take a look at my playbooks for more information. But all three of the “addons” you see I wish I had done initially.
 
 Set up PGVector as your vector database and if you can connect a sizeable SSD, do so. This will dramatically speed up retrieval. This is where your indexed stuff will index. It is way faster than what OWU does out of the box and when you switch you have to reindex everything, so just do it now. PGVector is the only one officially supported by OWU and it’s great anyway.
 
-Run a container with Tika. Tika is a document parser. We need this because OWU’s default parser sucks to the point even the documentation recommends Tika/Docling: [https://docs.openwebui.com/getting-started/advanced-topics/scaling/#step-6-fix-content-extraction--embeddings](https://docs.openwebui.com/getting-started/advanced-topics/scaling/#step-6-fix-content-extraction--embeddings). Another “just do it now” because otherwise some things won’t parse, or they’ll parse weird. You will need to ensure it is connected with environment variables such as the ones available in my template repo. [https://docs.openwebui.com/reference/env-configuration/#tika_server_url](https://docs.openwebui.com/reference/env-configuration/#tika_server_url)
+Run a container with Tika. Tika is a document parser. We need this because OWU’s default parser sucks to the point even the [documentation recommends Tika/Docling](https://docs.openwebui.com/getting-started/advanced-topics/scaling/#step-6-fix-content-extraction--embeddings). Another “just do it now” because otherwise some things won’t parse, or they’ll parse weird. You will need to ensure it is connected with environment variables such as the ones available in my template repo. Here they are if you want them for yourself, you probably want to bookmark this page anyway: [https://docs.openwebui.com/reference/env-configuration/#tika_server_url](https://docs.openwebui.com/reference/env-configuration/#tika_server_url)
 
-Set up an embedder – I highly recommend a Jina embedder. But not their reranker (more on that in the next section).  An embedder is a model that indexes your knowledge bases and retrieves them later. So if you set up another one later, you have to reindex all your knowledge bases with the new embedder. “Wait!” you may think. “You just said model there! I thought I didn’t have to host any models for this?” Well, yes, it Is running a model. But you can run an embedder on RAM if you want, it does not need a ton of performance nor VRAM. The model I use is “jina-embeddings-v5-text-small-retrieval”, it runs on 640MB of VRAM and has quantizations down to 500MB. I put mine on my GTX because I have a shiny GTX. If you have a competent homelab setup computer you’ll be fine. You do not need to run out to get a 900090 or whatever NVIDIA will be on by the time you read this article.
+Set up an embedder – I highly recommend a Jina embedder. But not their reranker (more on that in the next section).  An embedder is a model that indexes your knowledge bases and retrieves them later. So if you set up another one later, you have to reindex all your knowledge bases with the new embedder. “Wait!” you may think. “You just said model there! I thought I didn’t have to host any models for this?” Well, yes, it Is running a model. But you can run an embedder on RAM if you want, it does not need a ton of performance nor VRAM. The model I use is [jina-embeddings-v5-text-small-retrieval](https://huggingface.co/jinaai/jina-embeddings-v5-text-small-retrieval), it runs on 640MB of VRAM and has quantizations down to 500MB. I put mine on my GTX because I have a shiny GTX. If you have a competent homelab setup computer you’ll be fine. You do not need to run out to get a 900090 or whatever NVIDIA will be on by the time you read this article.
 
-Set “`RAG_SYSTEM_CONTEXT=True`”. I just found out this one while researching the article! By default RAG context gets injected into the user message, which shifts position every turn and defeats KV-cache/prompt-caching. The aforementioned setting pins it into the system message instead, which is a meaningful latency fix. Neato!
+Set `RAG_SYSTEM_CONTEXT=True`. I just found out this one while researching the article! By default RAG context gets injected into the user message, which shifts position every turn and defeats KV-cache/prompt-caching. The aforementioned setting pins it into the system message instead, which is a meaningful latency fix. Neato!
 
 Do not bother with a reranker: I spent hours getting Jina Reranker working and when I did it didn’t do much for me. If you want one anyway, Quoth the Robot:
 
