@@ -45,13 +45,13 @@ masthead:
 author:
   name             : "Carly Hessler"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "Curious hybrid Senior Software/Site Reliability Engineer strangely excited about Software Observability and Metrics. Relentless Problem-Solver. Occasionally funny."
-  location         : "Melbourne, Florida"
+  bio              : "Curious hybrid Senior Software/Platform Engineer who has worked on modernizing codebases older than her and lived to tell the tale. Relentless Problem-Solver. Occasionally funny."
+  location         : "US East Coast - Remote"
   email            :
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
-      url: "mailto:chessler1337@gmail.com"
+      url: "mailto:chessler@protonmail.com"
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
       url: "https://github.com/chessler"
